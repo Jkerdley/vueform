@@ -3,6 +3,31 @@ import { reactive, ref } from 'vue'
 import { Field, Form, ErrorMessage } from 'vee-validate'
 import * as yup from 'yup'
 
+const schema = yup.object({
+  firstName: yup.string().required('Имя обязательно'),
+  lastname: yup.string().required('Фамилия обязательна'),
+  country: yup.string().required('Нужно выбрать страну или регион'),
+  city: yup.string().required('Нужно выбрать город'),
+  phone: yup
+    .string()
+    .required('Телефон обязателен')
+    .matches(/^\+?\d{10,15}$/, 'Неверный формат телефона'),
+  // .matches(/^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}/),
+  email: yup.string().required('Email обязателен').email('Неверный формат email'),
+  password: yup
+    .string()
+    .min(6, 'Пароль должен быть не менее 6 символов')
+    .required('Пароль обязателен'),
+
+  'confirm-password': yup
+    .string()
+    .required('Подтверждение пароля обязательно')
+    .oneOf([yup.ref('password'), null], 'Пароли не совпадают'),
+  // .matches(yup.ref('password'), 'Пароли не совпадают'),
+  comments: yup.string().max(100, 'Максимум 100 символов'),
+  terms: yup.bool().required('Нужно согласиться с условиями'),
+})
+
 const cities = reactive([
   { key: 'msc', value: 'Москва' },
   { key: 'spb', value: 'Санкт-Петербург' },
@@ -30,7 +55,12 @@ const onFormSubmit = (values) => {
 <template>
   <section class="container">
     <h1 class="title">Регистрация</h1>
-    <Form v-if="!successMessage" class="registration-form" @submit="onFormSubmit">
+    <Form
+      :validation-schema="schema"
+      v-if="!successMessage"
+      class="registration-form"
+      @submit="onFormSubmit"
+    >
       <div class="form-group">
         <label class="form-label" for="firstname">Имя *</label>
         <Field class="form-control" name="firstname" type="text" id="firstname" />
@@ -107,7 +137,7 @@ const onFormSubmit = (values) => {
       </div>
       <div class="form-group form-group--full-width">
         <label class="form-label form-label--checkbox" for="terms">
-          <Field type="checkbox" id="terms" name="terms" />
+          <Field type="checkbox" id="terms" name="terms" :value="true" />
 
           Я согласен c условиями пользования и политикой конфиденциальности
         </label>
